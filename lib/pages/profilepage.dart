@@ -1,8 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
-class ProfilePage extends StatelessWidget {
-  final String userName = "Kim Allaiza Harion";
-  final String userEmail = "harionkimallaiza@gmail.com";
+class ProfilePage extends StatefulWidget {
+  @override
+  _ProfilePageState createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  String userName = "Kim Allaiza Harion";
+  String userEmail = "harionkimallaiza@gmail.com";
+  File? _profileImage;
+  final picker = ImagePicker();
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+
+  bool _isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController.text = userName;
+    _emailController.text = userEmail;
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    }
+  }
+
+  void _saveProfile() {
+    setState(() {
+      userName = _nameController.text;
+      userEmail = _emailController.text;
+      _isEditing = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,39 +53,79 @@ class ProfilePage extends StatelessWidget {
         elevation: 1,
         iconTheme: IconThemeData(color: Colors.black),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(_isEditing ? Icons.check : Icons.edit),
+            onPressed: () {
+              if (_isEditing) {
+                _saveProfile();
+              } else {
+                setState(() => _isEditing = true);
+              }
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 30),
         child: Column(
           children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundColor: Color(0xFF92A3FD),
-              child: Text(
-                userName[0],
-                style: TextStyle(fontSize: 40, color: Colors.white),
+            GestureDetector(
+              onTap: _isEditing ? _pickImage : null,
+              child: CircleAvatar(
+                radius: 50,
+                backgroundColor: Color(0xFF92A3FD),
+                backgroundImage:
+                    _profileImage != null ? FileImage(_profileImage!) : null,
+                child:
+                    _profileImage == null
+                        ? Text(
+                          userName[0],
+                          style: TextStyle(fontSize: 40, color: Colors.white),
+                        )
+                        : null,
               ),
             ),
             const SizedBox(height: 20),
-            Text(
-              userName,
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              userEmail,
-              style: TextStyle(color: Colors.grey[700], fontSize: 16),
-            ),
-            const SizedBox(height: 40),
+            _isEditing
+                ? Column(
+                  children: [
+                    TextField(
+                      controller: _nameController,
+                      decoration: InputDecoration(labelText: "Name"),
+                    ),
+                    TextField(
+                      controller: _emailController,
+                      decoration: InputDecoration(labelText: "Email"),
+                    ),
+                  ],
+                )
+                : Column(
+                  children: [
+                    Text(
+                      userName,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      userEmail,
+                      style: TextStyle(color: Colors.grey[700], fontSize: 16),
+                    ),
+                  ],
+                ),
+            const SizedBox(height: 30),
             ListTile(
-              leading: Icon(Icons.person, color: Colors.black54),
-              title: Text('Edit Profile'),
+              leading: Icon(Icons.favorite_border),
+              title: Text("My Favorites"),
               trailing: Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () {},
             ),
             Divider(),
             ListTile(
-              leading: Icon(Icons.settings, color: Colors.black54),
-              title: Text('Settings'),
+              leading: Icon(Icons.history),
+              title: Text("Diet History"),
               trailing: Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () {},
             ),
